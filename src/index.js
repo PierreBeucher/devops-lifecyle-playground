@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const port = 3000
+const host = '0.0.0.0'
 
 app.get('/', (req, res) => {
     res.send('Hello from Devops Lifecycle Playground!')
@@ -14,6 +15,6 @@ app.get('/.health', (req, res) => {
 var cats = require('./cats')
 app.use('/cats', cats.router)
 
-app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`)
+app.listen(port, host, () => {
+    console.log(`Example app listening at http://${host}:${port}`)
 })
