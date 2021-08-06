@@ -1,0 +1,17 @@
+{
+  "name": "devops-lifecycle-playground",
+  "version": "0.0.1",
+  "description": "Devops Lifecycle Playground app",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "jest": "^27.0.6"
+  }
+}
