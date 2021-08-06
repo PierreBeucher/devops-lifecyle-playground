@@ -4,7 +4,10 @@
   "description": "Devops Lifecycle Playground app",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "build": "docker-compose build",
+    "start-dev": "docker-compose up -d",
+    "test-unit": "jest test/unit/*.js",
+    "test-integ": "jest test/integ/*.js",
     "start": "node src/index.js"
   },
   "author": "",
@@ -13,6 +16,7 @@
     "express": "^4.17.1"
   },
   "devDependencies": {
-    "jest": "^27.0.6"
+    "jest": "^27.0.6",
+    "node-fetch": "^2.6.1"
   }
 }

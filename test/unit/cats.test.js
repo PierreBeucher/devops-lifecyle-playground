@@ -1,4 +1,4 @@
-const cats = require('../src/cats');
+const cats = require('../../src/cats');
 
 test('cat interact with ball', () => {
   expect(cats.catInteractWith('ball')).toBe('The cat is playing with the ball.');

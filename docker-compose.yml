@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  app:
+    image: mynodeapp
+    build:
+      context: .
+    ports:
+    - '8080:3000'
