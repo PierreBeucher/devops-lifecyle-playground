@@ -23,3 +23,9 @@ docker-build:
     - docker pull $IMAGE_URL || true
     - docker build -t $IMAGE_URL --cache-from $IMAGE_URL .
     - docker push $IMAGE_URL
+
+unit-test:
+  image: node:16.6.1-alpine3.11
+  script:
+  - npm ci
+  - npm run test-unit
