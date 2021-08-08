@@ -7,14 +7,23 @@ stages:
 - test
 - release
 
-docker-build:
-  image: docker:19.03.12
+.dind-service:
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
   services:
-    - docker:19.03.12-dind
+  - docker:19.03.12-dind
+  before_script:
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+
+#
+# Build
+#
+docker-build:
+  image: docker:19.03.12
+  stage: build
+  needs: []
+  extends: [ .dind-service ]
   script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     # Build using current branch slug if on branch, use tag name otherwise
     # Results in "registry.gitlab.com/pbeucher/devops-lifecyle-playground:branch-name" for branches
     # and "registry.gitlab.com/pbeucher/devops-lifecyle-playground:v1.2.3" for tags
@@ -24,8 +33,37 @@ docker-build:
     - docker build -t $IMAGE_URL --cache-from $IMAGE_URL .
     - docker push $IMAGE_URL
 
-unit-test:
+# 
+# Test
+# 
+# app-test contains required source code for testing
+# Use this image to avoid having to run 'npm ci' or such every time we run pipeline
+#
+test-unit:
+  stage: test
+  needs: []
   image: node:16.6.1-alpine3.11
   script:
   - npm ci
   - npm run test-unit
+  rules:
+  - if: $CI_COMMIT_BRANCH != null
+
+# Run our app with Docker Compose and DinD service and check it's running
+# A bit naive way to testing, may be improved on by using test/integ
+test-integ:
+  needs: [ docker-build ]
+  extends: [ .dind-service ]
+  stage: test
+  image: docker/compose:alpine-1.29.2
+  variables:
+    DOCKER_CERT_PATH: "/certs/client"
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_HOST: "docker:2376"
+  script:
+  - docker-compose -f docker-compose.ci.yml up -d
+  - docker-compose ps -a
+  - sleep 5
+  - wget docker:3000/.health
+  rules:
+  - if: $CI_COMMIT_BRANCH != null

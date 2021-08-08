@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  app:
+    image: registry.gitlab.com/pbeucher/devops-lifecyle-playground:${CI_COMMIT_REF_SLUG:-latest}
+    ports:
+    - '3000:3000'
+  
