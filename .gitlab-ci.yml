@@ -1,0 +1,25 @@
+include:
+  # Pipeline for branch and tags only
+  - template: 'Workflows/Branch-Pipelines.gitlab-ci.yml'
+
+stages:
+- build
+- test
+- release
+
+docker-build:
+  image: docker:19.03.12
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  services:
+    - docker:19.03.12-dind
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    # Build using current branch slug if on branch, use tag name otherwise
+    # Results in "registry.gitlab.com/pbeucher/devops-lifecyle-playground:branch-name" for branches
+    # and "registry.gitlab.com/pbeucher/devops-lifecyle-playground:v1.2.3" for tags
+    - IMAGE_URL="$CI_REGISTRY_IMAGE:${CI_COMMIT_REF_SLUG:-$CI_COMMIT_TAG}"
+    # Try to re-use existing image if any
+    - docker pull $IMAGE_URL || true
+    - docker build -t $IMAGE_URL --cache-from $IMAGE_URL .
+    - docker push $IMAGE_URL
