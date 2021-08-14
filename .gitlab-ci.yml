@@ -7,6 +7,12 @@ stages:
 - test
 - release
 
+# Only run CI on branches and tags
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH
+
 .dind-service:
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
@@ -32,6 +38,8 @@ docker-build:
     - docker pull $IMAGE_URL || true
     - docker build -t $IMAGE_URL --cache-from $IMAGE_URL .
     - docker push $IMAGE_URL
+  rules:
+  - if: $CI_COMMIT_BRANCH != 'master'
 
 # 
 # Test
@@ -47,7 +55,7 @@ test-unit:
   - npm ci
   - npm run test-unit
   rules:
-  - if: $CI_COMMIT_BRANCH != null
+  - if: $CI_COMMIT_BRANCH != null && $CI_COMMIT_BRANCH != 'master'
 
 # Run our app with Docker Compose and DinD service and check it's running
 # A bit naive way to testing, may be improved on by using test/integ
@@ -66,4 +74,4 @@ test-integ:
   - sleep 5
   - wget docker:3000/.health
   rules:
-  - if: $CI_COMMIT_BRANCH != null
+  - if: $CI_COMMIT_BRANCH != null && $CI_COMMIT_BRANCH != 'master'
