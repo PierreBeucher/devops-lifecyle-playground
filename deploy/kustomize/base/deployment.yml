@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-lifecycle-example
+  labels:
+    app: devops-lifecycle-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devops-lifecycle-example
+  template:
+    metadata:
+      labels:
+        app: devops-lifecycle-example
+    spec:
+      containers:
+      - name: devops-lifecycle-example
+        image: registry.gitlab.com/crafteo/devops-examples/devops-lifecyle-playground:v0-0-1
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            memory: 128Mi
+            cpu: "1"
+          requests:
+            memory: 64Mi
+            cpu: "0.2"
