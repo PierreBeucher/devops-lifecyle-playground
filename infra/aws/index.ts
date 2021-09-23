@@ -28,3 +28,11 @@ const k3sSpotFleet = new aws.ec2.SpotFleetRequest("k3sSpotFleet", {
       }
   ))
 });
+
+// command to retrieve kubeconfig:
+//
+// export K3S_HOST=ec2-13-36-241-24.eu-west-3.compute.amazonaws.com
+// ssh -i .ssh/devops-lifecycle-playground ubuntu@$K3S_HOST
+// curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE=0644 sh -
+// scp -i .ssh/devops-lifecycle-playground ubuntu@$K3S_HOST:/etc/rancher/k3s/k3s.yaml k3s.yml
+// sed -i 's/127.0.0.1/$K3S_HOST/g' k3s.yml
