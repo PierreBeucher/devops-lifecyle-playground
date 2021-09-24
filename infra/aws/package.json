@@ -1,11 +1,17 @@
 {
     "name": "devops-lifecyle-playground",
+    "scripts": {
+        "up": "pulumi up -s dev -y",
+        "destroy": "pulumi destroy -s dev -y",
+        "recreate": "npm run destroy && npm run up"
+    },
     "devDependencies": {
         "@types/node": "^10.0.0"
     },
     "dependencies": {
-        "@pulumi/pulumi": "^3.0.0",
         "@pulumi/aws": "^4.0.0",
-        "@pulumi/awsx": "^0.30.0"
+        "@pulumi/awsx": "^0.30.0",
+        "@pulumi/pulumi": "^3.0.0",
+        "node-scp": "^0.0.15"
     }
 }
