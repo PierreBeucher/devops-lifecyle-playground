@@ -6,6 +6,7 @@
         "recreate": "npm run destroy && npm run up"
     },
     "devDependencies": {
+        "@types/babel__core": "^7.1.16",
         "@types/node": "^10.0.0"
     },
     "dependencies": {
