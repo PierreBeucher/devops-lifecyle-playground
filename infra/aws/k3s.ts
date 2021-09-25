@@ -19,7 +19,7 @@ export const defaultk3sServerConfig = {
         "t2.micro",
         "t3.micro",
         "t3a.micro"
-        ],
+    ],
     hostedZoneName: "",
     serverHost: "",
     k3sInstallFlags: []
@@ -45,7 +45,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                 Version: "2012-10-17",
                 Statement: [
                     {
-                        Sid: "VisualEditor0",
+                        Sid: "Route53Access",
                         Effect: "Allow",
                         Action: [
                             "route53:GetHostedZone",
@@ -53,7 +53,13 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                             "route53:ListResourceRecordSets"
                         ],
                         Resource: `arn:aws:route53:::hostedzone/${hz.id}`
-                    }
+                    },
+                    {
+                        Sid: "EC2Access",
+                        Effect: "Allow",
+                        Action: "ec2:ModifyInstanceCreditSpecification",
+                        Resource: "arn:aws:ec2:*:010562097198:instance/*"
+                    },
                 ]
             }))
         })
@@ -93,8 +99,13 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             unzip awscliv2.zip
             ./aws/install
 
+            # Retrieve instance ID and update credit specification to standard to avoid surcost
+            # See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances-unlimited-mode-concepts.html#unlimited-mode-surplus-credits
+            export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+            aws ec2 modify-instance-credit-specification --instance-credit-specifications  "InstanceId=$INSTANCE_ID,CpuCredits=standard"
+
             # Create a DNS record using instance IP
-            export INSTANCE_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
+            export INSTANCE_PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
             echo '
             {
                 "Changes": [
@@ -106,7 +117,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                             "TTL": 30,
                             "ResourceRecords": [
                                 {
-                                    "Value": "'$INSTANCE_IP'"
+                                    "Value": "'$INSTANCE_PUBLIC_IP'"
                                 }
                             ]
                         }
