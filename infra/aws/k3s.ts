@@ -7,14 +7,13 @@ export interface K3sAwsServerConfig {
     spotPrice?: string,
     instanceTypes?: string[],
     ami?: string,
-    keyPair?: string,
+    keyPair: string,
     k3sInstallFlags?: string[]
 }
 
 export const defaultk3sServerConfig = {
     ami: "ami-0da4b2124e5ad5869", // ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210907 eu-west-3
-    spotPrice: "0.005",
-    keyPair: "devops-lifecycle-playground",
+    spotPrice: "0.004",
     instanceTypes: [
         "t2.micro",
         "t3.micro",
@@ -34,8 +33,6 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             ...defaultk3sServerConfig,
             ...userConfig
         }
-
-        console.log(`Config: ${k3sAwsConfig}`)
         
         const hostedZone = aws.route53.getZone({ name: k3sAwsConfig.hostedZoneName })
 
