@@ -7,7 +7,8 @@ export interface K3sAwsServerConfig {
     spotPrice?: string,
     instanceTypes?: string[],
     ami?: string,
-    keyPair?: string
+    keyPair?: string,
+    k3sInstallFlags?: string[]
 }
 
 export const defaultk3sServerConfig = {
@@ -20,7 +21,8 @@ export const defaultk3sServerConfig = {
         "t3a.micro"
         ],
     hostedZoneName: "",
-    serverHost: ""
+    serverHost: "",
+    k3sInstallFlags: []
 };
 
 export class K3sAwsServer extends pulumi.ComponentResource {
@@ -115,7 +117,9 @@ export class K3sAwsServer extends pulumi.ComponentResource {
 
             # Self-register instance IP in Hosted Zone record
             aws route53 change-resource-record-sets --hosted-zone-id ${hz.id} --change-batch file:///tmp/change-batch.json
-            `
+
+            # Install k3s with provided flags
+            curl -sfL https://get.k3s.io | sh -s - ${k3sAwsConfig.k3sInstallFlags.join(' ')}`
         )
 
         // Request a Spot fleet
@@ -124,6 +128,8 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             targetCapacity: 1,
             allocationStrategy: "lowestPrice",
             spotPrice: k3sAwsConfig.spotPrice,
+            terminateInstancesWithExpiration: true,
+            instanceInterruptionBehaviour: 'stop',
             launchSpecifications: k3sAwsConfig.instanceTypes.map(instanceType => (
                 {
                     instanceType: instanceType,

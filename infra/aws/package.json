@@ -2,7 +2,7 @@
     "name": "devops-lifecyle-playground",
     "scripts": {
         "up": "pulumi up -s dev -y --skip-preview",
-        "destroy": "pulumi destroy -s dev -y",
+        "destroy": "pulumi destroy -s dev -y --skip-preview",
         "recreate": "npm run destroy && npm run up"
     },
     "devDependencies": {
