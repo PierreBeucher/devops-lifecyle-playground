@@ -133,7 +133,11 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             curl -sfL https://get.k3s.io | sh -s - ${k3sAwsConfig.k3sInstallFlags.join(' ')}`
         )
 
-        // Request a Spot fleet
+        // Request a Spot fleet on all available availability zones
+        const availableZones = aws.getAvailabilityZones({
+            state: "available",
+        });
+
         const k3sSpotFleet = new aws.ec2.SpotFleetRequest(`k3sSpotFleet-${name}`, {
             iamFleetRole: "arn:aws:iam::010562097198:role/aws-ec2-spot-fleet-tagging-role",
             targetCapacity: 1,
@@ -148,7 +152,8 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                     spotPrice: k3sAwsConfig.spotPrice,
                     keyName: k3sAwsConfig.keyPair,
                     iamInstanceProfile: k3sInstanceProfile.name,
-                    userData: userData
+                    userData: userData,
+                    availabilityZone: availableZones.then(zones => zones.names.join(","))
                 }
             ))
         });
