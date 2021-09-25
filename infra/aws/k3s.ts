@@ -9,6 +9,7 @@ export interface K3sAwsServerConfig {
     ami?: string,
     keyPair: string,
     k3sInstallFlags?: string[]
+    availabilityZone: string
 }
 
 export const defaultk3sServerConfig = {
@@ -33,6 +34,13 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             ...defaultk3sServerConfig,
             ...userConfig
         }
+
+        // Volume used to persists K3S data
+        const k3sVolume = new aws.ebs.Volume(`k3sVolume-${name}`, {
+            availabilityZone: k3sAwsConfig.availabilityZone,
+            size: 2,
+            type: 'gp3'
+        });
         
         const hostedZone = aws.route53.getZone({ name: k3sAwsConfig.hostedZoneName })
 
@@ -54,8 +62,14 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                     {
                         Sid: "EC2Access",
                         Effect: "Allow",
-                        Action: "ec2:ModifyInstanceCreditSpecification",
-                        Resource: "arn:aws:ec2:*:010562097198:instance/*"
+                        Action: [
+                            "ec2:AttachVolume",
+                            "ec2:ModifyInstanceCreditSpecification"
+                        ],
+                        Resource: [
+                            "arn:aws:ec2:*:010562097198:instance/*",
+                            "arn:aws:ec2:*:010562097198:volume/*"
+                        ]
                     },
                 ]
             }))
@@ -80,7 +94,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
         const k3sInstanceProfile = new aws.iam.InstanceProfile(`k3sInstanceProfile-${name}`, {role: k3sInstanceRole.name});
 
         // userdata script whch will create record for out instance on startup
-        const userData = hostedZone.then(hz => 
+        const userData = pulumi.all([hostedZone, k3sVolume.id]).apply( ([hz, volId]) => 
             `#!/bin/sh
             apt-get update
             apt-get install unzip
@@ -100,6 +114,20 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             # See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/burstable-performance-instances-unlimited-mode-concepts.html#unlimited-mode-surplus-credits
             export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
             aws ec2 modify-instance-credit-specification --instance-credit-specifications  "InstanceId=$INSTANCE_ID,CpuCredits=standard"
+
+            # Attach k3s volume and initialize it
+            # Follow https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html
+            aws ec2 attach-volume --volume-id ${volId} --instance-id $INSTANCE_ID --device /dev/sdf
+
+            # Wait for volume to appear
+            until lsblk /dev/nvme1n1; do echo "Waiting for /dev/nvme1n1..."; sleep 2; done
+
+            # If there's no filesystem on the volume, create one
+            [ "$(file -s /dev/nvme1n1)" = "/dev/nvme1n1: data" ] && mkfs -t xfs /dev/nvme1n1
+
+            # Mount volume for k3s data
+            mkdir -p /var/lib/rancher/k3s
+            mount /dev/nvme1n1 /var/lib/rancher/k3s
 
             # Create a DNS record using instance IP
             export INSTANCE_PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
@@ -130,11 +158,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             curl -sfL https://get.k3s.io | sh -s - ${k3sAwsConfig.k3sInstallFlags.join(' ')}`
         )
 
-        // Request a Spot fleet on all available availability zones
-        const availableZones = aws.getAvailabilityZones({
-            state: "available",
-        });
-
+        // Request a Spot fleet
         const k3sSpotFleet = new aws.ec2.SpotFleetRequest(`k3sSpotFleet-${name}`, {
             iamFleetRole: "arn:aws:iam::010562097198:role/aws-ec2-spot-fleet-tagging-role",
             targetCapacity: 1,
@@ -150,7 +174,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                     keyName: k3sAwsConfig.keyPair,
                     iamInstanceProfile: k3sInstanceProfile.name,
                     userData: userData,
-                    availabilityZone: availableZones.then(zones => zones.names.join(","))
+                    availabilityZone: k3sAwsConfig.availabilityZone
                 }
             ))
         });
