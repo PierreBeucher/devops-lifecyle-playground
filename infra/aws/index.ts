@@ -1,4 +1,7 @@
 import * as k3s from "./k3s"
+import * as traefik from "./traefik"
+import * as k8s from "@pulumi/kubernetes";
+import * as pulumi from "@pulumi/pulumi";
 
 const keyPair = "devops-lifecycle-playground"
 const hostedZoneName = "devops.crafteo.io."
@@ -6,6 +9,7 @@ const token = "Very123SecretToken"
 
 // server init must only be done once
 // create a dummy resource ClusterInitDone 
+// Traefik is disabled to install our own with custom config
 const k3sServer1 = new k3s.K3sAwsServer("k3sServer-1", {
   keyPair: keyPair,
   hostedZoneName: hostedZoneName,
@@ -15,6 +19,7 @@ const k3sServer1 = new k3s.K3sAwsServer("k3sServer-1", {
     "server", "--cluster-init",
     "--token", token,
     "--write-kubeconfig-mode", "644",
+    "--disable", "traefik"
   ]
 })
 
@@ -28,6 +33,7 @@ const k3sServer2 = new k3s.K3sAwsServer("k3sServer-2", {
     "--server", "https://k3s-1.devops.crafteo.io:6443",
     "--token", token,
     "--write-kubeconfig-mode", "644",
+    "--disable", "traefik"
   ]
 })
 
@@ -41,5 +47,8 @@ const k3sServer3 = new k3s.K3sAwsServer("k3sServer-3", {
     "--server", "https://k3s-1.devops.crafteo.io:6443",
     "--token", token,
     "--write-kubeconfig-mode", "644",
+    "--disable", "traefik"
   ]
 })
+
+const traefikDeploy = new traefik.Traefik("traefik", {})
