@@ -1,0 +1,12 @@
+resources:
+- ClusterIssuer.yml
+- Certificate.yml
+
+secretGenerator:
+- name: cert-manager-aws-secret
+  files:
+  - secret-access-key
+  # Kustomize do not magically update ClusterIssuer with dynamic secret name contrary to what doc said
+  # Use a static name instead
+  options:
+    disableNameSuffixHash: true

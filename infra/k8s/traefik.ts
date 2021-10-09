@@ -52,8 +52,13 @@ export class Traefik extends pulumi.ComponentResource {
         repo: "https://charts.jetstack.io",
     },
     values: {
-      installCRDs: true
-    }
+      installCRDs: true,
+      ingressShim: {
+        defaultIssuerGroup: "cert-manager.io",
+        defaultIssuerKind: "ClusterIssuer",
+        defaultIssuerName: "cert-manager-acme-issuer"
+      }
+    } 
   }, { 
     dependsOn: [certManagerNamespace]
   })
