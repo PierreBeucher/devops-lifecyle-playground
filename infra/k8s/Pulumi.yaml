@@ -1,0 +1,3 @@
+name: devops-lifecyle-playground-k8s
+runtime: nodejs
+description: Kubernetes resources for Devops Lifecycle Playground

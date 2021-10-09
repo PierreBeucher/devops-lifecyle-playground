@@ -10,11 +10,11 @@ export const defaultTraefikConfig = {
 export class Traefik extends pulumi.ComponentResource {
 
   constructor(name : string, userConfig : TraefikConfig, opts? : pulumi.ComponentResourceOptions) {
-      super("crafteo:K3s", name, userConfig, opts);
+      super("crafteo:K3s", name, {}, opts);
   
   const traefikNamespace = new k8s.core.v1.Namespace("traefik-namespace", {
     metadata: {
-        name: "traefik2"
+        name: "traefik"
     }
   });
 
@@ -22,7 +22,7 @@ export class Traefik extends pulumi.ComponentResource {
     name: "traefik",
     chart: "traefik",
     version: "10.3.6",
-    namespace: "traefik2",
+    namespace: "traefik",
     repositoryOpts:{
         repo: "https://helm.traefik.io/traefik",
     },
@@ -40,14 +40,14 @@ export class Traefik extends pulumi.ComponentResource {
 
   const certManagerNamespace = new k8s.core.v1.Namespace("cert-manager-namespace", {
     metadata: {
-        name: "cert-manager2"
+        name: "cert-manager"
     }
   });
   
   const certManagerChart =  new k8s.helm.v3.Release("cert-manager-chart", {
     chart: "cert-manager",
     version: "1.5.3",
-    namespace: "cert-manager2",
+    namespace: "cert-manager",
     repositoryOpts:{
         repo: "https://charts.jetstack.io",
     },

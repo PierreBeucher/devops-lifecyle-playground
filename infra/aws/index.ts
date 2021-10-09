@@ -1,7 +1,4 @@
 import * as k3s from "./k3s"
-import * as traefik from "./traefik"
-import * as k8s from "@pulumi/kubernetes";
-import * as pulumi from "@pulumi/pulumi";
 
 const keyPair = "devops-lifecycle-playground"
 const hostedZoneName = "devops.crafteo.io."
@@ -51,4 +48,4 @@ const k3sServer3 = new k3s.K3sAwsServer("k3sServer-3", {
   ]
 })
 
-const traefikDeploy = new traefik.Traefik("traefik", {})
+// IAM user and policy which will be used by Cert Manager for ACME DNS challenge
