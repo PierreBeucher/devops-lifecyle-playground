@@ -1,9 +1,21 @@
 import * as k3s from "./k3s"
 import * as aws from "@pulumi/aws"
+import * as pulumi from "@pulumi/pulumi"
 
-const keyPair = "devops-lifecycle-playground"
-const hostedZoneName = "devops.crafteo.io."
-const token = "Very123SecretToken"
+// load config
+const config = new pulumi.Config();
+const keyPair = config.require("sshKeyPair")
+const hostedZoneName = config.require("hostedZoneName")
+const token = config.require("k3sSecretToken")
+const az = config.require("availabilityZone")
+
+// use Hosted Zone name to retrieve related FQDN
+// Hosted Zone name may have a trailing dot, remove it first
+let k3sFqdn
+if (hostedZoneName[hostedZoneName.length-1] === ".")
+  k3sFqdn = hostedZoneName.slice(0,-1)
+else
+  k3sFqdn = hostedZoneName
 
 // server init must only be done once
 // create a dummy resource ClusterInitDone 
@@ -11,8 +23,8 @@ const token = "Very123SecretToken"
 const k3sServer1 = new k3s.K3sAwsServer("k3sServer-1", {
   keyPair: keyPair,
   hostedZoneName: hostedZoneName,
-  serverHost: "k3s-1.devops.crafteo.io",
-  availabilityZone: "eu-west-3a",
+  serverHost: `k3s-1.${k3sFqdn}`,
+  availabilityZone: az,
   k3sInstallFlags: [
     "server", "--cluster-init",
     "--token", token,
@@ -24,11 +36,11 @@ const k3sServer1 = new k3s.K3sAwsServer("k3sServer-1", {
 const k3sServer2 = new k3s.K3sAwsServer("k3sServer-2", {
   keyPair: keyPair,
   hostedZoneName: hostedZoneName,
-  serverHost: "k3s-2.devops.crafteo.io",
+  serverHost: `k3s-2.${k3sFqdn}`,
   availabilityZone: "eu-west-3b",
   k3sInstallFlags: [
     "server",
-    "--server", "https://k3s-1.devops.crafteo.io:6443",
+    "--server", `https://k3s-1.${k3sFqdn}:6443`,
     "--token", token,
     "--write-kubeconfig-mode", "644",
     "--disable", "traefik"
@@ -38,11 +50,11 @@ const k3sServer2 = new k3s.K3sAwsServer("k3sServer-2", {
 const k3sServer3 = new k3s.K3sAwsServer("k3sServer-3", {
   keyPair: keyPair,
   hostedZoneName: hostedZoneName,
-  serverHost: "k3s-3.devops.crafteo.io",
+  serverHost: `k3s-3.${k3sFqdn}`,
   availabilityZone: "eu-west-3c",
   k3sInstallFlags: [
     "server",
-    "--server", "https://k3s-1.devops.crafteo.io:6443",
+    "--server", `https://k3s-1.${k3sFqdn}:6443`,
     "--token", token,
     "--write-kubeconfig-mode", "644",
     "--disable", "traefik"

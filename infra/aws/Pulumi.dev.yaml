@@ -1,2 +1,7 @@
 config:
   aws:region: eu-west-3
+  devops-lifecyle-playground:hostedZoneName: devops.crafteo.io.
+  devops-lifecyle-playground:k3sSecretToken:
+    secure: AAABAEaq7g8S7qcKZBj4U8YJDHkPum1rhsGvzFVHe7Y8JULReBCsrXIbii0/Dcb+QUYFnXsmoiM/JOGsqA==
+  devops-lifecyle-playground:sshKeyPair: devops-lifecycle-playground
+  devops-lifecyle-playground:availabilityZone: eu-west-3a
