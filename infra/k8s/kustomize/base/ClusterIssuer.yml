@@ -2,6 +2,7 @@ apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   name: cert-manager-acme-issuer
+  namespace: cert-manager
 spec:
   acme:
     email: pierre@crafteo.io
@@ -11,7 +12,7 @@ spec:
     solvers:
     - dns01:
         route53:
-          accessKeyID: AKIAQE5MM2AXME2AY3D5
+          accessKeyID: AKIAQE5MM2AXHYV4H6GZ
           region: eu-west-3
           secretAccessKeySecretRef:
             key: secret-access-key
