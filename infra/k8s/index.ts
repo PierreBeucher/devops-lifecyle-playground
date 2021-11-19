@@ -1,4 +1,3 @@
-import * as traefik from "./traefik"
 import * as k8s from "@pulumi/kubernetes";
 
 const traefikNamespace = new k8s.core.v1.Namespace("traefik-namespace", {
