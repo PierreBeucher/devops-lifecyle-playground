@@ -1,6 +1,5 @@
 resources:
 - ClusterIssuer.yml
-- Certificate.yml
 
 secretGenerator:
 - name: cert-manager-aws-secret
