@@ -21,3 +21,9 @@ affinity:
 
 # Avoid port collision as per multi-instance Traefik
 hostNetwork: true
+
+# Automatically redirect http to https
+# Not required but handy
+ports:
+  web:
+    redirectTo: websecure
