@@ -7,7 +7,6 @@ deployment:
 # Using affinity from Traefik default values example
 # This pod anti-affinity forces the scheduler to put traefik pods
 # on nodes where no other traefik pods are scheduled.
-# It should be used when hostNetwork: true to prevent port conflicts
 affinity:
   podAntiAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
@@ -18,9 +17,6 @@ affinity:
           operator: In
           values: 
           - traefik
-
-# Avoid port collision as per multi-instance Traefik
-hostNetwork: true
 
 # Automatically redirect http to https
 # Not required but handy
