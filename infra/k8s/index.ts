@@ -1,11 +1,15 @@
 import * as k8s from "@pulumi/kubernetes";
 import * as aws from "@pulumi/aws"
+import * as yaml from "js-yaml"
+import * as fs from "fs"
 
 const traefikNamespace = new k8s.core.v1.Namespace("traefik-namespace", {
   metadata: {
       name: "traefik"
   }
 });
+
+const traefikValues = yaml.load(fs.readFileSync("helm/values-traefik.yml", "utf-8")) as JSON
 
 const release = new k8s.helm.v3.Release("traefik-helm", {
   name: "traefik",
@@ -15,14 +19,7 @@ const release = new k8s.helm.v3.Release("traefik-helm", {
   repositoryOpts:{
       repo: "https://helm.traefik.io/traefik",
   },
-  values: {}
-  // values: {
-  //     controller: {
-  //         metrics: {
-  //             enabled: true,
-  //         }
-  //     }
-  // },
+  values: traefikValues,
 }, {  
   dependsOn: [traefikNamespace]
 })
@@ -39,21 +36,18 @@ const certManagerNamespace = new k8s.core.v1.Namespace("cert-manager-namespace",
   }
 });
 
+
+const certManagerValues = yaml.load(fs.readFileSync("helm/values-certmanager.yml", "utf-8")) as JSON
+
 const certManagerChart =  new k8s.helm.v3.Release("cert-manager-chart", {
+  name: "cert-manager",
   chart: "cert-manager",
   version: "1.5.3",
   namespace: certManagerNamespace.metadata.name,
   repositoryOpts:{
       repo: "https://charts.jetstack.io",
   },
-  values: {
-    installCRDs: true,
-    ingressShim: {
-      defaultIssuerGroup: "cert-manager.io",
-      defaultIssuerKind: "ClusterIssuer",
-      defaultIssuerName: "cert-manager-acme-issuer"
-    }
-  } 
+  values: certManagerValues
 }, { 
   dependsOn: [certManagerNamespace]
 })

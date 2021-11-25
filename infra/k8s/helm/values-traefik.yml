@@ -1,0 +1,23 @@
+# We cant an highlay available Traefik
+# Use a Deployment with nodeAffinity spreading our Pods across nodes
+# We could also use a DaemonSet to have 1 instance par node
+deployment:
+  replicas: 3
+
+# Using affinity from Traefik default values example
+# This pod anti-affinity forces the scheduler to put traefik pods
+# on nodes where no other traefik pods are scheduled.
+# It should be used when hostNetwork: true to prevent port conflicts
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - topologyKey: failure-domain.beta.kubernetes.io/zone
+      labelSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values: 
+          - traefik
+
+# Avoid port collision as per multi-instance Traefik
+hostNetwork: true
