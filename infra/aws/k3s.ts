@@ -155,7 +155,14 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             aws route53 change-resource-record-sets --hosted-zone-id ${hz.id} --change-batch file:///tmp/change-batch.json
 
             # Install k3s with provided flags
-            curl -sfL https://get.k3s.io | sh -s - ${k3sAwsConfig.k3sInstallFlags.join(' ')}`
+            # Sometime fails because of timeout, use retry pattern
+            n=0
+            until [ "$n" -ge 5 ]
+            do
+                curl -sfL https://get.k3s.io | sh -s - ${k3sAwsConfig.k3sInstallFlags.join(' ')} && break
+                n=$((n+1)) 
+                sleep 1
+            done`
         )
 
         // Request a Spot fleet
@@ -174,9 +181,15 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                     keyName: k3sAwsConfig.keyPair,
                     iamInstanceProfile: k3sInstanceProfile.name,
                     userData: userData,
-                    availabilityZone: k3sAwsConfig.availabilityZone
+                    availabilityZone: k3sAwsConfig.availabilityZone,
+                    tags: {
+                        "Name": name
                 }
-            ))
+                }
+            )),
+            tags: {
+                "Name": name
+            }
         });
     }
 }
