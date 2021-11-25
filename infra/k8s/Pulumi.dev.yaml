@@ -1,1 +1,2 @@
 config:
+  aws:region: eu-west-3

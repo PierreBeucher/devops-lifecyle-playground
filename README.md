@@ -70,12 +70,6 @@ sed -i 's/127.0.0.1/k3s-1.devops.crafteo.io/g' $KUBECONFIG
 kubectl get no
 ```
 
-Cert Manager use Route53 for DNS challenge. An IAM user has been created for this purpose, we need to provide credentials to Cert Manager:
-
-- Generate credentials for `certManagerIAMUser` IAM User
-- Create file `infra/k8s/kustomize/base/secret-access-key` with Secret Key (will be used to generate secret)
-- Update `infra/k8s/kustomize/base/ClusterIssuer.yml` with Access Key ID such as `accessKeyID: AKIAXXX`
-
 Deploy Kubernetes resources (Traefik, CertManager...)
 
 ```
@@ -87,3 +81,7 @@ Deploy application and expose-it via Ingress:
 ```
 kubectl -k deploy/kustomize/base/ apply
 ```
+
+Notes: 
+
+- Cert Manager use ACME DNS challenge with Route53 to verify certificates. IAM credentials for related IAM User are generated automatically for this purpose. 
