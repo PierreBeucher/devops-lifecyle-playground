@@ -14,7 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1"
+    "@types/js-yaml": "^4.0.5",
+    "express": "^4.17.1",
+    "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "jest": "^27.0.6",

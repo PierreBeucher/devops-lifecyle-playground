@@ -1,0 +1,21 @@
+{
+    "name": "devops-lifecyle-playground",
+    "scripts": {
+        "up": "pulumi up -s dev -y --skip-preview",
+        "destroy": "pulumi destroy -s dev -y --skip-preview",
+        "refresh": "pulumi refresh -s dev -y --skip-preview",
+        "preview": "pulumi preview -s dev",
+        "recreate": "npm run destroy && npm run up"
+    },
+    "devDependencies": {
+        "@types/babel__core": "^7.1.16",
+        "@types/node": "^10.0.0"
+    },
+    "dependencies": {
+        "@pulumi/aws": "^4.0.0",
+        "@pulumi/awsx": "^0.30.0",
+        "@pulumi/kubernetes": "^3.7.3",
+        "@pulumi/pulumi": "^3.0.0",
+        "node-scp": "^0.0.15"
+    }
+}

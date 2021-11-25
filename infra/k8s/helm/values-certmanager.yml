@@ -1,0 +1,10 @@
+# Install CRDs such as ClusterIssuer
+installCRDs: true
+
+# Define default certificate issuer to be used
+# In our case, ClusterIssuer cert-manager-acme-issuer should be used by default
+# to generate certificates
+ingressShim:
+  defaultIssuerGroup: cert-manager.io
+  defaultIssuerKind: ClusterIssuer
+  defaultIssuerName: cert-manager-acme-issuer
