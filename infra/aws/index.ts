@@ -27,7 +27,7 @@ const k3sServer1 = new k3s.K3sAwsServer("k3sServer-1", {
   availabilityZone: az,
   k3sInstallFlags: [
     "server", "--cluster-init",
-    "--token", token,
+    "--token", `'${token}'`, // wrap token in single quotes as it may contain special characters
     "--write-kubeconfig-mode", "644",
     "--disable", "traefik"
   ]
@@ -41,7 +41,7 @@ const k3sServer2 = new k3s.K3sAwsServer("k3sServer-2", {
   k3sInstallFlags: [
     "server",
     "--server", `https://k3s-1.${k3sFqdn}:6443`,
-    "--token", token,
+    "--token", `'${token}'`, // wrap token in single quotes as it may contain special characters
     "--write-kubeconfig-mode", "644",
     "--disable", "traefik"
   ]
@@ -55,7 +55,7 @@ const k3sServer3 = new k3s.K3sAwsServer("k3sServer-3", {
   k3sInstallFlags: [
     "server",
     "--server", `https://k3s-1.${k3sFqdn}:6443`,
-    "--token", token,
+    "--token", `'${token}'`, // wrap token in single quotes as it may contain special characters
     "--write-kubeconfig-mode", "644",
     "--disable", "traefik"
   ]
@@ -63,7 +63,8 @@ const k3sServer3 = new k3s.K3sAwsServer("k3sServer-3", {
 
 // IAM user and policy which will be used by Cert Manager for ACME DNS challenge
 const certManagerIAMUser = new aws.iam.User("certManagerIAMUser", {
-  name: "certManagerIAMUser"
+  name: "certManagerIAMUser",
+  forceDestroy: true
 })
 
 const certManagerIAMPolicy = new aws.iam.Policy("certManagerIAMPolicy", {
