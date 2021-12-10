@@ -164,6 +164,31 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                 sleep 1
             done`
         )
+        
+        const k3sSecurityGroup = new aws.ec2.SecurityGroup(`k3s-sg-${name}`, {
+            ingress: [
+                // SSH
+                { fromPort: 22, toPort: 22, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                // HTTP(S)
+                { fromPort: 80, toPort: 80, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                { fromPort: 443, toPort: 443, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                // K3S - See https://rancher.com/docs/k3s/latest/en/installation/installation-requirements/
+                { fromPort: 6443, toPort: 6443, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                { fromPort: 8472, toPort: 8472, protocol: "udp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                { fromPort: 10250, toPort: 10250, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                { fromPort: 2379, toPort: 2380, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+            ],
+            egress: [{
+                fromPort: 0,
+                toPort: 0,
+                protocol: "-1",
+                cidrBlocks: ["0.0.0.0/0"],
+                ipv6CidrBlocks: ["::/0"],
+            }],
+            tags: {
+                Name: `${name}`,
+            },
+        });
 
         // Request a Spot fleet
         const k3sSpotFleet = new aws.ec2.SpotFleetRequest(`k3sSpotFleet-${name}`, {
@@ -182,6 +207,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                     iamInstanceProfile: k3sInstanceProfile.name,
                     userData: userData,
                     availabilityZone: k3sAwsConfig.availabilityZone,
+                    vpcSecurityGroupIds: [ k3sSecurityGroup.id ],
                     tags: {
                         "Name": name
                 }
