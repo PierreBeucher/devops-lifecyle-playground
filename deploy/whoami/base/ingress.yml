@@ -1,24 +1,24 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: devops-lifecycle-example
+  name: whoami
   annotations:
     # Required for Traefik to handle HTTPS requests
     traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
   tls:
   - hosts:
-      - k3s-1.devops.crafteo.io
-    secretName: crafteo-wildcard-certificate
+      - whoami.devops.crafteo.io
+    secretName: crafteo-whoami-certificate
   rules:
-  - host: k3s-1.devops.crafteo.io
+  - host: whoami.devops.crafteo.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: devops-lifecycle-example
+            name: whoami
             port:
-              number: 3000
+              number: 80
 
