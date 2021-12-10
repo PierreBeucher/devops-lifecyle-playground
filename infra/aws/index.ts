@@ -61,6 +61,19 @@ const k3sServer3 = new k3s.K3sAwsServer("k3sServer-3", {
   ]
 })
 
+// single DNS record pointing on all k3s servers
+const dnsRecord = new aws.route53.Record(`dns-record-k3s`, {
+  zoneId: aws.route53.getZone({ name: hostedZoneName }).then(hz => hz.id),
+  name: '*.' + k3sFqdn,
+  type: "A",
+  ttl: 30,
+  records: [
+    k3sServer1.eip.publicIp,
+    k3sServer2.eip.publicIp,
+    k3sServer3.eip.publicIp
+  ],
+});
+
 // IAM user and policy which will be used by Cert Manager for ACME DNS challenge
 const certManagerIAMUser = new aws.iam.User("certManagerIAMUser", {
   name: "certManagerIAMUser",

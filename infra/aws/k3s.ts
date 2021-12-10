@@ -27,6 +27,8 @@ export const defaultk3sServerConfig = {
 
 export class K3sAwsServer extends pulumi.ComponentResource {
 
+    eip: aws.ec2.Eip;
+
     constructor(name : string, userConfig : K3sAwsServerConfig, opts? : pulumi.ComponentResourceOptions) {
         super("crafteo:K3s", name, userConfig, opts);
 
@@ -44,9 +46,16 @@ export class K3sAwsServer extends pulumi.ComponentResource {
         
         const hostedZone = aws.route53.getZone({ name: k3sAwsConfig.hostedZoneName })
 
+        // EIP which will be attached to our ec2 instance
+        this.eip = new aws.ec2.Eip(`eip-${name}`, {
+            tags: {
+                "Name": name
+            }
+        });
+
         // Role and policies allowing EC2 instances to update Route53 record to self-register DNS record with their IPs
         const k3sIAMPolicy = new aws.iam.Policy(`k3sPolicy-${name}`, {
-            policy: hostedZone.then(hz => JSON.stringify({
+            policy: pulumi.all([hostedZone, this.eip.id]).apply( ([hz, eipAllocId]) => JSON.stringify({
                 Version: "2012-10-17",
                 Statement: [
                     {
@@ -62,12 +71,16 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                     {
                         Sid: "EC2Access",
                         Effect: "Allow",
-                        Action: [
+                        "Action": [
                             "ec2:AttachVolume",
-                            "ec2:ModifyInstanceCreditSpecification"
+                            "ec2:ModifyInstanceCreditSpecification",
+                            "ec2:AssociateAddress"
                         ],
-                        Resource: [
+                        "Resource": [
                             "arn:aws:ec2:*:010562097198:instance/*",
+                            // use id and not allocationId as Pulumi returns undefined
+                            // see https://github.com/pulumi/pulumi-aws/issues/498
+                            `arn:aws:ec2:*:010562097198:elastic-ip/${eipAllocId}`,
                             "arn:aws:ec2:*:010562097198:volume/*"
                         ]
                     },
@@ -94,7 +107,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
         const k3sInstanceProfile = new aws.iam.InstanceProfile(`k3sInstanceProfile-${name}`, {role: k3sInstanceRole.name});
 
         // userdata script whch will create record for out instance on startup
-        const userData = pulumi.all([hostedZone, k3sVolume.id]).apply( ([hz, volId]) => 
+        const userData = pulumi.all([k3sVolume.id, this.eip.id]).apply( ([volId, eipAllocId]) => 
             `#!/bin/sh
             apt-get update
             apt-get install unzip
@@ -129,30 +142,8 @@ export class K3sAwsServer extends pulumi.ComponentResource {
             mkdir -p /var/lib/rancher/k3s
             mount /dev/nvme1n1 /var/lib/rancher/k3s
 
-            # Create a DNS record using instance IP
-            export INSTANCE_PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
-            echo '
-            {
-                "Changes": [
-                    {
-                        "Action": "UPSERT",
-                        "ResourceRecordSet": {
-                            "Name": "${k3sAwsConfig.serverHost}",
-                            "Type": "A",
-                            "TTL": 30,
-                            "ResourceRecords": [
-                                {
-                                    "Value": "'$INSTANCE_PUBLIC_IP'"
-                                }
-                            ]
-                        }
-                    }
-                ]
-            }
-            ' > /tmp/change-batch.json
-
-            # Self-register instance IP in Hosted Zone record
-            aws route53 change-resource-record-sets --hosted-zone-id ${hz.id} --change-batch file:///tmp/change-batch.json
+            # Associate EIP to instance
+            aws ec2 associate-address --instance-id $INSTANCE_ID --allocation-id ${eipAllocId}
 
             # Install k3s with provided flags
             # Sometime fails because of timeout, use retry pattern
@@ -164,6 +155,31 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                 sleep 1
             done`
         )
+        
+        const k3sSecurityGroup = new aws.ec2.SecurityGroup(`k3s-sg-${name}`, {
+            ingress: [
+                // SSH
+                { fromPort: 22, toPort: 22, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                // HTTP(S)
+                { fromPort: 80, toPort: 80, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                { fromPort: 443, toPort: 443, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                // K3S - See https://rancher.com/docs/k3s/latest/en/installation/installation-requirements/
+                { fromPort: 6443, toPort: 6443, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                { fromPort: 8472, toPort: 8472, protocol: "udp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                { fromPort: 10250, toPort: 10250, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+                { fromPort: 2379, toPort: 2380, protocol: "tcp", cidrBlocks: ["0.0.0.0/0"], ipv6CidrBlocks: ["0.0.0.0/0"] },
+            ],
+            egress: [{
+                fromPort: 0,
+                toPort: 0,
+                protocol: "-1",
+                cidrBlocks: ["0.0.0.0/0"],
+                ipv6CidrBlocks: ["::/0"],
+            }],
+            tags: {
+                Name: `${name}`,
+            },
+        });
 
         // Request a Spot fleet
         const k3sSpotFleet = new aws.ec2.SpotFleetRequest(`k3sSpotFleet-${name}`, {
@@ -182,6 +198,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                     iamInstanceProfile: k3sInstanceProfile.name,
                     userData: userData,
                     availabilityZone: k3sAwsConfig.availabilityZone,
+                    vpcSecurityGroupIds: [ k3sSecurityGroup.id ],
                     tags: {
                         "Name": name
                 }
@@ -191,5 +208,16 @@ export class K3sAwsServer extends pulumi.ComponentResource {
                 "Name": name
             }
         });
+
+        // DNS record using Elastic IP
+        // instance will automatically affect this IP on startup
+        const dnsRecord = new aws.route53.Record(`dns-record-${name}`, {
+            zoneId: hostedZone.then(hz => hz.id),
+            name: k3sAwsConfig.serverHost,
+            type: "A",
+            ttl: 30,
+            records: [this.eip.publicIp],
+        });
+        
     }
 }

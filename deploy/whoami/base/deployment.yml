@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devops-lifecycle-example
+  name: whoami
   labels:
-    app: devops-lifecycle-example
+    app: whoami
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: devops-lifecycle-example
+      app: whoami
   template:
     metadata:
       labels:
-        app: devops-lifecycle-example
+        app: whoami
     spec:
       containers:
-      - name: devops-lifecycle-example
-        image: registry.gitlab.com/crafteo/devops-examples/devops-lifecyle-playground:v0-0-1
+      - name: whoami
+        image: traefik/whoami
         ports:
-        - containerPort: 3000
+        - containerPort: 80
         resources:
           limits:
             memory: 128Mi
