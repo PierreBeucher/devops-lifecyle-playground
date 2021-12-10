@@ -32,5 +32,8 @@ k8s:
 	# Deploy kubernetes resources (Traefik, Cert Manager...)
 	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/k8s up -s dev -yfr
 
+whoami:
+	KUBECONFIG="${KUBECONFIG}" kubectl apply -k deploy/whoami/base 
+
 ssh:
 	ssh -i infra/aws/.ssh/dev ubuntu@k3s-1.devops.crafteo.io
