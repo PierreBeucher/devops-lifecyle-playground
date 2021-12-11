@@ -1,3 +1,6 @@
 node_modules/
 .ssh
 .kubeconfig.yml
+
+# Secret configs
+infra/k8s/helm/secrets-datadog.yml
