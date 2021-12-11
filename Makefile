@@ -1,4 +1,4 @@
-.PHONY=infra aws k8s 
+.PHONY=infra aws k8s k8s-await k8s-kubeconfig whoami ssh destroy
 n ?= 10
 KUBECONFIG ?= ${PWD}/infra/k8s/.kubeconfig.yml
 
@@ -37,3 +37,9 @@ whoami:
 
 ssh:
 	ssh -i infra/aws/.ssh/dev ubuntu@k3s-1.devops.crafteo.io
+
+destroy:
+	@echo "Are you sure you want to destroy?"
+	@read destroyit
+	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/k8s destroy -s dev -yfr
+	pulumi -C infra/aws destroy -s dev -yfr
