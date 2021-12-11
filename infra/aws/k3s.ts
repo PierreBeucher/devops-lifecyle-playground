@@ -40,7 +40,7 @@ export class K3sAwsServer extends pulumi.ComponentResource {
         // Volume used to persists K3S data
         const k3sVolume = new aws.ebs.Volume(`k3sVolume-${name}`, {
             availabilityZone: k3sAwsConfig.availabilityZone,
-            size: 2,
+            size: 8,
             type: 'gp3'
         });
         
