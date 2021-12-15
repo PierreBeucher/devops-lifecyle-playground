@@ -38,50 +38,42 @@ Directory structure:
 
 ## Usage
 
-Define configuration for your stack using `infra/aws/Pulumi.template.yaml`. Make sure to have SSH Private key available.
+Available stacks:
 
-Deploy infrastructure (K3S running on EC2):
-
-```
-pulumi -C infra/aws up -s dev -yf
-```
-
-Check K3S has been properly installed:
+HA Kubernetes cluster (K3S) running on AWS EC2 spot instances
 
 ```
-ssh -i infra/aws/.ssh/dev ubuntu@k3s-1.devops.crafteo.io k3s --version
+# Deploy Kubernetes cluster with Traefik and Cert Manager
+make infra
+
+# Only Kubernetes cluster (K3S) on AWS
+make aws
 ```
 
-Retrieve Kubeconfig and deploy Kubernetes components with a command like:
+Traefik with Cert Manager (using ACME DNS challenge via AWS Route53)
 
 ```
-# Kubeconfig file to use
-# Provide full path so that we won't look for it via relative path
-export KUBECONFIG=$PWD/infra/k8s/.kubeconfig.yml
-
-# -i points to the private key matching sshKeyPair config
-# Replace hostname by hostname matching your hosted zone
-scp -i infra/aws/.ssh/dev ubuntu@k3s-1.devops.crafteo.io:/etc/rancher/k3s/k3s.yaml $KUBECONFIG
-
-# replace 127.0.0.1 by your domain name
-sed -i 's/127.0.0.1/k3s-1.devops.crafteo.io/g' $KUBECONFIG
-
-# check server is available with nodes
-kubectl get no
+make traefik
 ```
 
-Deploy Kubernetes resources (Traefik, CertManager...)
+Datadog deployment
 
 ```
-pulumi -C infra/k8s up -s dev -yf
+# Datadog API key is required, create config from template and set API key
+cp infra/datadog/helm/secrets-datadog.template.yml infra/datadog/helm/secrets-datadog.yml
+nano infra/datadog/helm/secrets-datadog.yml
+
+make datadog
 ```
 
-Deploy application and expose-it via Ingress:
+Simple whoami container, handy to test overall accessibility and Traefik/Cert Manager deployment:
 
 ```
-kubectl -k deploy/kustomize/base/ apply
+make whoami
 ```
 
-Notes: 
+Docker Example Voting App using adapated Kustomize (see [Docker Samples - Example Voting App repo](https://github.com/dockersamples/example-voting-app))
 
-- Cert Manager use ACME DNS challenge with Route53 to verify certificates. IAM credentials for related IAM User are generated automatically for this purpose. 
+```
+make vote
+```
