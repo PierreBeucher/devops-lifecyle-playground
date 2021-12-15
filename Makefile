@@ -1,8 +1,8 @@
-.PHONY=infra aws k8s k8s-await k8s-kubeconfig whoami ssh destroy
+.PHONY=infra aws k8s-await k8s-kubeconfig whoami ssh destroy traefik datadog
 n ?= 10
-KUBECONFIG ?= ${PWD}/infra/k8s/.kubeconfig.yml
+KUBECONFIG ?= ${PWD}/infra/.kubeconfig.yml
 
-infra: aws k8s-await k8s-kubeconfig k8s
+infra: aws k8s-await k8s-kubeconfig traefik
 
 aws:
 	# Deploy AWS infra
@@ -28,9 +28,11 @@ k8s-kubeconfig:
 	@echo "K3S Kubernetes cluster is ready! Use Kubeconfig ${KUBECONFIG}"
 	@echo "Run 'export KUBECONFIG=${KUBECONFIG}'"
 
-k8s:
-	# Deploy kubernetes resources (Traefik, Cert Manager...)
-	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/k8s up -s dev -yfr
+traefik:
+	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/traefik up -s dev -yfr
+
+datadog:
+	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/datadog up -s dev -yfr
 
 whoami:
 	KUBECONFIG="${KUBECONFIG}" kubectl apply -k deploy/whoami/base 

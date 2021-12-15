@@ -1,0 +1,3 @@
+name: devops-lifecyle-playground-traefik
+runtime: nodejs
+description: Kubernetes resources for Traefik with Cert Manager deployment

@@ -3,4 +3,4 @@ node_modules/
 .kubeconfig.yml
 
 # Secret configs
-infra/k8s/helm/secrets-datadog.yml
+infra/datadog/helm/secrets-datadog.yml

@@ -17,11 +17,19 @@
     "@types/js-yaml": "^4.0.5",
     "deepmerge-ts": "^2.0.0",
     "express": "^4.17.1",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "@pulumi/aws": "^4.0.0",
+    "@pulumi/awsx": "^0.30.0",
+    "@pulumi/kubernetes": "^3.7.3",
+    "@pulumi/pulumi": "^3.0.0",
+    "node-scp": "^0.0.15"
+
   },
   "devDependencies": {
     "jest": "^27.0.6",
     "node-fetch": "^2.6.1",
-    "standard-version": "^9.3.1"
+    "standard-version": "^9.3.1",
+    "@types/babel__core": "^7.1.16",
+    "@types/node": "^10.0.0"
   }
 }
