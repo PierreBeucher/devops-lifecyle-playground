@@ -1,0 +1,12 @@
+resources:
+- db-deployment.yml
+- db-service.yml
+- redis-deployment.yml
+- redis-service.yml
+- result-deployment.yml
+- result-service.yml
+- vote-deployment.yml
+- vote-service.yml
+- worker-deployment.yml
+- ingress.yml
+- certificate.yml

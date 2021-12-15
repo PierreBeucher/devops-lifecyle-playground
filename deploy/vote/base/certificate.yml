@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vote
+spec:
+  dnsNames:
+  - "vote.devops.crafteo.io"
+  - "result.devops.crafteo.io"
+  issuerRef:
+    kind: ClusterIssuer
+    name: cert-manager-acme-issuer
+  secretName: vote-certificate

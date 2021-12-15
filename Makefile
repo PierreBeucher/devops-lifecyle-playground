@@ -37,6 +37,10 @@ datadog:
 whoami:
 	KUBECONFIG="${KUBECONFIG}" kubectl apply -k deploy/whoami/base 
 
+vote:
+	KUBECONFIG="${KUBECONFIG}" kubectl apply -f deploy/vote/base/namespace.yml
+	KUBECONFIG="${KUBECONFIG}" kubectl apply -n vote -k deploy/vote/base 
+
 ssh:
 	ssh -i infra/aws/.ssh/dev ubuntu@k3s-1.devops.crafteo.io
 
