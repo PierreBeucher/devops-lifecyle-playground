@@ -1,6 +1,7 @@
 .PHONY=infra aws k8s-await k8s-kubeconfig whoami ssh destroy traefik datadog
 n ?= 10
 KUBECONFIG ?= ${PWD}/infra/.kubeconfig.yml
+KIBANA_BASIC_AUTH_FILE ?= ${PWD}/infra/efk/base/auth
 
 #
 # Infra
@@ -38,15 +39,24 @@ traefik:
 datadog:
 	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/datadog up -s dev -yfr
 
-efk: helm-repo-elastic elasticsearch kibana fluentd
-
-helm-repo-elastic:
-	helm repo add elastic https://helm.elastic.co
+efk: elasticsearch kibana fluentd
 
 elasticsearch:
+	helm repo add elastic https://helm.elastic.co
 	helm upgrade --install -n efk -f infra/efk/values-elasticsearch.yml elasticsearch elastic/elasticsearch
 
 kibana:
+	helm repo add elastic https://helm.elastic.co
+	# Generate secret if not exists
+	# Usernam: crafteo
+	# Password: see content of ${KIBANA_BASIC_AUTH_FILE}.clear
+	@[ -f "${KIBANA_BASIC_AUTH_FILE}" ] || \
+	( \
+		password=$$(docker run --rm busybox:1.31.1 /bin/sh -c "< /dev/urandom tr -cd '[:alnum:]' | head -c20") && \
+		echo "# username: crafteo - password: $$password" > ${KIBANA_BASIC_AUTH_FILE}.clear && \
+		printf "crafteo:`openssl passwd -apr1 $$password`\n" >> ${KIBANA_BASIC_AUTH_FILE} \
+	)
+	kubectl apply -n efk -k infra/efk/base/
 	helm upgrade --install -n efk -f infra/efk/values-kibana.yml kibana elastic/kibana
 
 fluentd:

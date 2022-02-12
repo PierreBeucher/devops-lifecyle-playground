@@ -1,0 +1,9 @@
+resources:
+- basic-auth.yml
+
+secretGenerator:
+- name: kibana-basic-auth
+  options:
+    disableNameSuffixHash: true
+  files:
+  - auth
