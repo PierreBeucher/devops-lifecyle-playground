@@ -43,6 +43,7 @@ Available stacks:
 - Kubernetes cluster (K3S)
 - Traefik with Cert Manager
 - Datadog
+- Logging: Elasticsearch, Fluentd, Kibana (EFK)
 - Application: whoami
 - Application: Example Voting App
 
@@ -60,6 +61,12 @@ make infra
 # make traefik          # Deploy Traefik with Cert Manager (use DNS challange)
 ```
 
+Expose Traefik dashboard to access ia via [`http://localhost:9000/dashboard/`](http://localhost:9000/dashboard/)
+
+```
+make traefik-dashboard
+```
+
 ## Datadog
 
 Datadog deployment
@@ -71,6 +78,21 @@ nano infra/datadog/helm/secrets-datadog.yml
 
 make datadog
 ```
+
+## Logging: Elasticsearch, Fluentd, Kibana (EFK)
+
+```sh
+make efk
+
+# Or per component
+# make elasticsearch
+# make kibana
+# make fluentd
+```
+
+- Access via [`https://kibana.devops.crafteo.io`](https://kibana.devops.crafteo.io)
+- Protected by basic auth with username `crafteo`, see auto-generated file `infra/efk/base/auth.clear` for password.
+- Initiliaze index pattern: _Stack Management > Index Patterns > Create `fluentd*`_
 
 ## Application: whoami
 

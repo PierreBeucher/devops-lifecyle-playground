@@ -4,3 +4,5 @@ node_modules/
 
 # Secret configs
 infra/datadog/helm/secrets-datadog.yml
+infra/efk/base/auth
+infra/efk/base/auth.clear

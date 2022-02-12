@@ -1,0 +1,23 @@
+# Configuration for a small non-HA instance
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+  limits:
+    cpu: "500m"
+    memory: "1Gi"
+
+
+ingress:
+  enabled: true
+  className:
+  pathtype: Prefix
+  annotations:
+    # Required for Traefik to handle HTTPS requests
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # make Traefik use kibana-basic-auth Middleware under efk namespace
+    traefik.ingress.kubernetes.io/router.middlewares: efk-kibana-basic-auth@kubernetescrd
+  hosts:
+    - host: kibana.devops.crafteo.io
+      paths:
+        - path: /
