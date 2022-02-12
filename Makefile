@@ -2,6 +2,10 @@
 n ?= 10
 KUBECONFIG ?= ${PWD}/infra/.kubeconfig.yml
 
+#
+# Infra
+#
+
 infra: aws k8s-await k8s-kubeconfig traefik
 
 aws:
@@ -33,6 +37,26 @@ traefik:
 
 datadog:
 	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/datadog up -s dev -yfr
+
+efk: helm-repo-elastic elasticsearch kibana fluentd
+
+helm-repo-elastic:
+	helm repo add elastic https://helm.elastic.co
+
+elasticsearch:
+	helm upgrade --install -n efk -f infra/efk/values-elasticsearch.yml elasticsearch elastic/elasticsearch
+
+kibana:
+	helm upgrade --install -n efk -f infra/efk/values-kibana.yml kibana elastic/kibana
+
+fluentd:
+	helm repo add fluent https://fluent.github.io/helm-charts
+	helm upgrade --install -n efk -f infra/efk/values-fluentd.yml fluentd fluent/fluentd
+	
+
+#
+# Applications
+#
 
 whoami:
 	KUBECONFIG="${KUBECONFIG}" kubectl apply -k deploy/whoami/base 

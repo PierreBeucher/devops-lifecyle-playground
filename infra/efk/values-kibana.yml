@@ -1,0 +1,19 @@
+# Configuration for a small non-HA instance
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+  limits:
+    cpu: "500m"
+    memory: "1Gi"
+
+
+ingress:
+  enabled: true
+  annotations:
+    # Required for Traefik to handle HTTPS requests
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  hosts:
+    - host: kibana.devops.crafteo.io
+      paths:
+        - path: /
