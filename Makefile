@@ -84,7 +84,7 @@ ssh:
 	ssh -i infra/aws/.ssh/dev ubuntu@k3s-1.devops.crafteo.io
 
 destroy:
-	@echo "Are you sure you want to destroy?"
+	@echo "Are you sure you want to destroy infrastructure?"
 	@read destroyit
-	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/k8s destroy -s dev -yfr
+	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/aws destroy -s dev -yfr
 	pulumi -C infra/aws destroy -s dev -yfr
