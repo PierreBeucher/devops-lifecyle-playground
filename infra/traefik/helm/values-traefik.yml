@@ -21,5 +21,8 @@ affinity:
 # Automatically redirect http to https
 # Not required but handy
 ports:
+  # Expose traefik port for dashboard
+  traefik:
+    expose: true
   web:
     redirectTo: websecure

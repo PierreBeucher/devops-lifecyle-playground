@@ -61,6 +61,12 @@ make infra
 # make traefik          # Deploy Traefik with Cert Manager (use DNS challange)
 ```
 
+Expose Traefik dashboard to access ia via [`http://localhost:9000/dashboard/`](http://localhost:9000/dashboard/)
+
+```
+make traefik-dashboard
+```
+
 ## Datadog
 
 Datadog deployment

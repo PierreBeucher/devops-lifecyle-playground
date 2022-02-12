@@ -36,6 +36,11 @@ k8s-kubeconfig:
 traefik:
 	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/traefik up -s dev -yfr
 
+traefik-dashboard:
+	# Acces Traefik dashboard via http://localhost:9000/dashboard/ (mind trailing slash)
+	# Stop with CTRl+C
+	kubectl -n traefik port-forward svc/traefik 9000:9000
+
 datadog:
 	KUBECONFIG="${KUBECONFIG}" pulumi -C infra/datadog up -s dev -yfr
 
