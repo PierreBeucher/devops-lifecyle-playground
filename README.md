@@ -40,21 +40,27 @@ Directory structure:
 
 Available stacks:
 
+- Kubernetes cluster (K3S)
+- Traefik with Cert Manager
+- Datadog
+- Application: whoami
+- Application: Example Voting App
+
+## Kubernetes cluster (K3S)
+
 HA Kubernetes cluster (K3S) running on AWS EC2 spot instances
 
-```
+```sh
 # Deploy Kubernetes cluster with Traefik and Cert Manager
 make infra
 
-# Only Kubernetes cluster (K3S) on AWS
-make aws
+# Or you can run each step one per one
+# make aws              # Deploy fresh K8S cluster with K3S
+# make k8s-kubeconfig   # Download Kubeconfig locally
+# make traefik          # Deploy Traefik with Cert Manager (use DNS challange)
 ```
 
-Traefik with Cert Manager (using ACME DNS challenge via AWS Route53)
-
-```
-make traefik
-```
+## Datadog
 
 Datadog deployment
 
@@ -66,11 +72,15 @@ nano infra/datadog/helm/secrets-datadog.yml
 make datadog
 ```
 
+## Application: whoami
+
 Simple whoami container, handy to test overall accessibility and Traefik/Cert Manager deployment:
 
 ```
 make whoami
 ```
+
+## Application: Example Voting App
 
 Docker Example Voting App using adapated Kustomize (see [Docker Samples - Example Voting App repo](https://github.com/dockersamples/example-voting-app))
 
